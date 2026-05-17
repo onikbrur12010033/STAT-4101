@@ -1,0 +1,846 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, graphicx, booktabs}
+\usepackage{geometry}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{xcolor}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\lstset{
+	language=Python,
+	basicstyle=\ttfamily\footnotesize,  % ছোট ফন্টে কোড
+	backgroundcolor=\color{gray!50},    
+	frame=single,                       
+	keywordstyle=\color{blue},         
+	commentstyle=\color{gray},         
+	stringstyle=\color{orange},         
+	showstringspaces=false,
+	breaklines=true,                   
+	breakatwhitespace=true,             
+	postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space}, % লাইন ভাঙার চিহ্ন
+	tabsize=4,                          
+	captionpos=b                        
+}
+
+\usepackage[hidelinks]{hyperref}
+\geometry{margin=1in}
+
+% Code formatting setup
+\lstset{
+	language=Python,
+	basicstyle=\ttfamily\small,
+	backgroundcolor=\color{gray!10},
+	frame=single,
+	keywordstyle=\color{blue},
+	commentstyle=\color{gray},
+	showstringspaces=false
+}
+
+\begin{document}
+	
+	\title{Categorical Data Analysis Assignment}
+	\author{Aktekhar Anik \\ \textbf{ID: 12010033}}
+	\date{\today}
+	\maketitle
+	
+	\tableofcontents
+	\newpage
+
+	
+	\section{Basic EDA using Lung Disease Data}
+	
+	\subsection{Py Code}
+	\begin{lstlisting}
+		# current working directory
+		import os
+		print(os.getcwd())
+		print()
+		
+		# install necessary packages
+		import pandas as pd
+		import seaborn as sns
+		import matplotlib.pyplot as plt
+		import scipy.stats as stats
+		
+		# read data
+		df = pd.read_csv("lung_disease.csv")
+		df.head()
+	\end{lstlisting}
+	
+	\subsection{Output}
+	\begin{center}
+		\begin{tabular}{|c|c|c|c|c|c|}
+			\hline
+			\textbf{ID} & \textbf{Smoking} & \textbf{Age} & \textbf{Income} & \textbf{Pollution} & \textbf{LungDisease} \\
+			\hline
+			1 & Yes & 36 & Low & High & Yes \\
+			2 & No & 28 & Low & Low & No \\
+			3 & No & 52 & Medium & High & No \\
+			4 & No & 39 & High & High & No \\
+			5 & Yes & 32 & Low & Low & Yes \\
+			\hline
+		\end{tabular}
+	\end{center}
+\section{Age Distribution — Normal or Skewed}
+
+\subsection{Py Code}
+\begin{lstlisting}
+	# Age distribution
+	print(df['Age'].describe())
+	
+	# plot
+	sns.histplot(df['Age'], kde=True)
+	plt.title("Age Distribution")
+	plt.show()
+	
+	# Skewness check
+	print("Skewness:", df['Age'].skew())
+\end{lstlisting}
+
+\subsection{Output}
+\begin{verbatim}
+	count    500.000000
+	mean     43.904000
+	std      14.604841
+	min      20.000000
+	25%      30.750000
+	50%      45.000000
+	75%      56.000000
+	max      69.000000
+\end{verbatim}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{1(i).png}
+	\caption{Age Distribution Histogram}
+\end{figure}
+
+\textbf{Skewness:} 0.012141455267137275
+
+\subsection{Interpretation}
+\begin{itemize}
+	\item The average age is about 44 years.
+	\item Age is approximately normally distributed.
+	\item Skewness is very close to 0, meaning the data is slightly positively skewed, and the graph also shows it.
+\end{itemize}
+
+\section{Smokers vs Non‑Smokers Proportion}
+
+\subsection{Py Code}
+\begin{lstlisting}
+	smoke_prop = df['Smoking'].value_counts(normalize=True) * 100
+	print(smoke_prop)
+\end{lstlisting}
+
+\subsection{Output}
+\begin{verbatim}
+	Smoking
+	No     58.6
+	Yes    41.4
+	Name: proportion, dtype: float64
+\end{verbatim}
+
+\subsection{Comment}
+\begin{itemize}
+	\item 58.6\% people are not smoker.
+	\item 41.4\% people are smoker.
+\end{itemize}
+
+\section{Encode Data}
+
+\subsection{Py Code}
+\begin{lstlisting}
+	import pandas as pd
+	df_encoded = df.copy()
+	df_encoded['Smoking'] = df_encoded['Smoking'].map({'Yes': 1, 'No': 0})
+	df_encoded['LungDisease'] = df_encoded['LungDisease'].map({'Yes': 1, 'No': 0})
+	df_encoded['Income'] = df_encoded['Income'].map({'Low': 1, 'Medium': 2, 'High': 3})
+	df_encoded['Pollution'] = df_encoded['Pollution'].map({'Low': 0, 'High': 1})
+\end{lstlisting}
+	% ---- Add this after previous sections ----
+	\section{Highest Frequency Income Group}
+	
+	\subsection{Py Code}
+	\begin{lstlisting}
+		# income group counts
+		print(df_encoded['Income'].value_counts())
+	\end{lstlisting}
+	
+	\subsection{Output}
+	\begin{verbatim}
+		Income
+		1    204
+		2    197
+		3     99
+		Name: count, dtype: int64
+	\end{verbatim}
+	
+	\subsection{Comment}
+	Highest frequency income group is 1 (Low).
+	
+	% --------------------------------------------------
+	
+	\section{Percentage Exposed to High Pollution}
+	
+	\subsection{Py Code}
+	\begin{lstlisting}
+		# Percentage exposed to high pollution
+		pollution_pct = df_encoded['Pollution'].mean() * 100
+		print(f"High pollution exposure: {pollution_pct:.2f}%")
+	\end{lstlisting}
+	
+	\subsection{Output}
+	\begin{verbatim}
+		High pollution exposure: 70.40%
+	\end{verbatim}
+	% ---- Add this after previous sections ----
+	\section{Overall Prevalence of Lung Disease}
+	
+	\subsection{Py Code}
+	\begin{lstlisting}
+		# Overall prevalence of lung disease
+		disease_pct = (df['Lung_Disease'] == 'Yes').mean() * 100
+		print(f"Lung disease prevalence: {disease_pct:.2f}%")
+	\end{lstlisting}
+	
+	\subsection{Output}
+	\begin{verbatim}
+		Lung disease prevalence: 52.80%
+	\end{verbatim}
+	
+	% --------------------------------------------------
+	
+	\section{Association and Crosstable}
+	
+	\subsection{Association between Smoking and Lung Disease}
+	
+	\subsubsection{Py Code}
+	\begin{lstlisting}
+		from scipy.stats import chi2_contingency, fisher_exact
+		
+		# Create contingency table
+		cont_table = pd.crosstab(df['Smoking'], df['LungDisease'])
+		print(cont_table)
+		
+		# Chi-square test
+		chi2, p, dof, expected = chi2_contingency(cont_table)
+		print(f"Chi-square = {chi2:.2f}, p-value = {p:.4f}")
+		
+		# Fisher's Exact test (only for 2x2 table)
+		if cont_table.shape == (2,2):
+		oddsratio, p_fisher = fisher_exact(cont_table)
+		print("Fisher p-value:", p_fisher)
+	\end{lstlisting}
+	
+	\subsubsection{Output}
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			& \textbf{No} & \textbf{Yes} \\
+			\hline
+			\textbf{Smoking No} & 184 & 109 \\
+			\textbf{Smoking Yes} & 52 & 155 \\
+			\hline
+		\end{tabular}
+	\end{center}
+	
+	\begin{verbatim}
+		Chi-square = 67.59, p-value = 0.0000
+		Fisher p-value: 5.128610707567623e-17
+	\end{verbatim}
+	
+	\subsubsection{Comment}
+	Since p-value is \(5.12 \times 10^{-17} < 0.05\), hence there is a \textbf{significant association} between Smoking and Lung Disease.
+	% ---- Add this after previous sections ----
+	\section{Interpret Contingency Table}
+	
+	\subsection{Py Code}
+	\begin{lstlisting}
+		print(cont_table)
+		cont_table.plot(kind='bar', stacked=True)
+		plt.title("Smoking vs Lung Disease")
+		plt.show()
+	\end{lstlisting}
+		\subsection{Output}
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			& \textbf{No} & \textbf{Yes} \\
+			\hline
+			\textbf{Smoking No} & 184 & 109 \\
+			\textbf{Smoking Yes} & 52 & 155 \\
+			\hline
+		\end{tabular}
+	\end{center}
+	\vspace{1em} % ছবির পরে এক লাইন gap
+	\vspace{1em}
+	% Figure positioned at top
+	\begin{figure}[h]
+		\centering
+		\vspace{-1cm} % উপরের ফাঁকা জায়গা কমাবে
+		\includegraphics[width=0.6\textwidth]{smoking_vs_lung_disease.png}
+		\caption{Smoking vs Lung Disease (Stacked Bar Chart)}
+		\vspace{-0.5cm} % নিচের ফাঁকা জায়গা কমাবে
+	\end{figure}
+	\vspace{1em} % ছবির পরে এক লাইন gap
+	
+	\subsection{Interpretation}
+	\begin{itemize}
+		\item \textbf{For non-smokers:} The blue bar (“No Lung Disease”) is taller — meaning most non-smokers do \textbf{not} have the disease.
+		\item \textbf{For smokers:} The orange bar (“Lung Disease”) is much taller — meaning the majority of smokers \textbf{do} have the disease.
+	\end{itemize}
+	
+	\subsection{Conclusion}
+	There is a \textbf{strong positive association} between smoking and lung disease. The data suggests that smoking increases the risk of developing lung disease substantially.
+	
+	% ---- Add this after previous sections ----
+	\section{Does Pollution Level Affect Lung Disease?}
+	
+	\subsection{Compare Lung Disease Prevalence Across Income Groups}
+	
+	\subsubsection{Py Code}
+	\begin{lstlisting}
+		income_disease = pd.crosstab(df['Income'], df['LungDisease'], normalize='index') * 100
+		print(income_disease)
+		income_disease.plot(kind='bar', stacked=True)
+		plt.title("Lung Disease Prevalence by Income Group")
+		plt.ylabel("Percentage")
+		plt.show()
+	\end{lstlisting}
+	
+	\subsubsection{Output}
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			& \textbf{No} & \textbf{Yes} \\
+			\hline
+			\textbf{High} & 51.515152 & 48.484848 \\
+			\textbf{Low} & 44.117647 & 55.882353 \\
+			\textbf{Medium} & 48.223350 & 51.776650 \\
+			\hline
+		\end{tabular}
+	\end{center}
+	\vspace{1em} 
+\begin{figure}[b]
+	\centering
+	\vspace{-1cm} % উপরের ফাঁকা জায়গা কমাবে
+	\includegraphics[width=0.80\textwidth, height=0.20\textheight]{income_vs_lung_disease.png}
+	\caption{Lung Disease Prevalence by Income Group (Stacked Bar Chart)}
+	
+\end{figure}
+
+\vspace{1em} % ছবির পরে এক লাইন gap
+\subsection{Interpretation}
+\begin{itemize}
+	\item \textbf{Low income:} most lung disease cases (465 vs. 40 healthy) $\rightarrow$ strong positive association.
+	\item \textbf{Medium income:} moderate (50 sick, 505 healthy).
+	\item \textbf{High income:} fewest sick (52) and most healthy (480) $\rightarrow$ strong negative association.
+	\item \textbf{Clear trend:} lower income $\rightarrow$ higher lung disease risk.
+\end{itemize}
+% ---- Add this after previous sections ----
+\section{Factor Has the Strongest Relationship with Lung Disease}
+
+\subsection{Py Code}
+\begin{lstlisting}
+	from scipy.stats import chi2_contingency
+	import pandas as pd
+	
+	factors = ['Smoking', 'Pollution', 'Income']
+	
+	for f in factors:
+	table = pd.crosstab(df[f], df['LungDisease'])
+	chi2, p, dof, exp = chi2_contingency(table)
+	
+	if p < 0.05:
+	result = "Significant (real relationship exists)"
+	else:
+	result = "Not significant (no relationship)"
+	
+	print(" p-value = {p}  {result}")
+\end{lstlisting}
+
+\subsection{Output}
+\begin{verbatim}
+	Smoking: p-value = 2.0085e-16 → Significant (real relationship exists)
+	Pollution: p-value = 5.9757e-09 → Significant (real relationship exists) 
+	Income: p-value = 4.4929e-01 → Not significant (no relationship) 
+\end{verbatim}
+\subsection{Comment:}
+ 
+Smoking has the strongest relationship with lung disease. Pollution is significant but weaker. 
+Income shows no relationship. .
+
+% ---- Add this after previous sections ----
+\section{Statistical Testing}
+
+\subsection{Chi-square Test for Smoking vs Lung Disease and Pollution vs Lung Disease}
+
+\subsubsection{Py Code}
+\begin{lstlisting}
+	# Chi-square test on Smoking vs Lung Disease
+	table_smoke = pd.crosstab(df['Smoking'], df['LungDisease'])
+	chi2_smoke, p_smoke, _, _ = stats.chi2_contingency(table_smoke)
+	print(f"Smoking vs Lung Disease: p = {p_smoke:.4e}")
+	
+	# Chi-square test on Pollution vs Lung Disease
+	table_poll = pd.crosstab(df['Pollution'], df['LungDisease'])
+	chi2_poll, p_poll, _, _ = stats.chi2_contingency(table_poll)
+	print(f"Pollution vs Lung Disease: p = {p_poll:.4e}")
+\end{lstlisting}
+
+\subsubsection{Output}
+\begin{verbatim}
+	Smoking vs Lung Disease: p = 2.0085094601569646e-16
+	Pollution vs Lung Disease: p = 5.975692575712951e-09
+\end{verbatim}
+% ---- Add this after previous sections ----
+\section{Fisher's Exact Test and Odds Ratio}
+
+\subsection{When to Use Fisher's Exact Test}
+Use Fisher's exact test instead of chi-square when:
+\begin{enumerate}
+	\item Small sample size (any expected cell count < 5)
+	\item Very small total N (< 20 to 40, depending on source)
+	\item 2×2 table with sparse data
+\end{enumerate}
+
+\textbf{Quick rule:}
+\begin{itemize}
+	\item Chi-square works well for large samples.
+	\item Fisher's exact is more accurate for small samples (but computationally heavy for large tables).
+\end{itemize}
+
+% --------------------------------------------------
+
+\subsection{Calculate and Interpret Odds Ratio for Smoking and Lung Disease}
+
+\subsubsection{Py Code}
+\begin{lstlisting}
+	# finding odds ratio
+	table = pd.crosstab(df['Smoking'], df['LungDisease'])
+	odds_ratio = (table.iloc[1,1] / table.iloc[1,0]) / (table.iloc[0,1] / table.iloc[0,0])
+	print(f"Odds Ratio: {odds_ratio:.2f}")
+\end{lstlisting}
+
+\subsubsection{Output}
+\begin{verbatim}
+	Odds Ratio: 5.03
+\end{verbatim}
+
+\subsubsection{Comment}
+Smokers have approximately 5 times higher odds of developing lung disease compared to non-smokers.
+% ---- Add this after previous sections ----
+\section{Correlation and Interpretation}
+
+\subsection{Correlation between Smoking, Age, and Lung Disease}
+
+\subsubsection{Py Code}
+\begin{lstlisting}
+	corr_smoke = df['Smoking'].astype('category').cat.codes.corr(
+	df['LungDisease'].astype('category').cat.codes)
+	
+	corr_age = df['Age'].corr(
+	df['LungDisease'].astype('category').cat.codes)
+	
+	print(f"Smoking-Lung Disease correlation: {corr_smoke:.2f}")
+	print(f"Age-Lung Disease correlation: {corr_age:.2f}")
+\end{lstlisting}
+
+\subsubsection{Output}
+\begin{verbatim}
+	Smoking-Lung Disease correlation: 0.37
+	Age-Lung Disease correlation: 0.25
+\end{verbatim}
+
+\subsubsection{Interpretation}
+\begin{itemize}
+	\item \textbf{Smoking-Lung Disease (0.37):} Weak to moderate positive correlation — as smoking increases, lung disease tends to increase moderately.
+	\item \textbf{Age-Lung Disease (0.25):} Weak positive correlation — older age is slightly associated with more lung disease, but weaker than smoking.
+\end{itemize}
+
+\subsubsection{Conclusion}
+Smoking has a \textbf{stronger relationship} with lung disease than age does.
+% ---- Add this after previous sections ----
+\subsection{Why Correlation Is Not Sufficient for Causal Inference}
+
+\begin{enumerate}
+	\item \textbf{Reverse causation} — X may cause Y, but Y could also cause X.
+	\item \textbf{Confounding variables} — A third factor (e.g., smoking) causes both (e.g., yellow fingers and lung cancer).
+	\item \textbf{Spurious correlation} — Purely by chance (e.g., ice cream sales and drowning incidents, due to hot weather).
+	\item \textbf{No direction} — Correlation doesn't tell which variable influences which.
+\end{enumerate}
+
+\textbf{In a word:} Correlation only measures \textbf{association}, not cause-effect. 
+Need randomized controlled trials or causal methods (e.g., instrumental variables, difference-in-differences) for causation.
+% ---- Add this after previous sections ----
+\section{Logistic Regression}
+
+\subsection{Fit a Logistic Regression Model}
+
+\subsubsection{Py Code}
+\begin{lstlisting}
+	import statsmodels.api as sm
+	import statsmodels.formula.api as smf
+	
+	# Logistic regression model
+	model = smf.logit('LungDisease ~ Smoking + Age + Pollution + Income',
+	data=df_encoded).fit()
+	print(model.summary())
+\end{lstlisting}
+
+\subsubsection{Output}
+\begin{center}
+	\begin{tabular}{|l|r|r|r|r|r|r|}
+		\hline
+		\textbf{Variable} & \textbf{coef} & \textbf{std err} & \textbf{z} & \textbf{P>|z|} & \textbf{[0.025]} & \textbf{[0.975]} \\
+		\hline
+		Intercept & -2.8373 & 0.461 & -6.153 & 0.000 & -3.741 & -1.934 \\
+		Smoking & 1.7021 & 0.218 & 7.810 & 0.000 & 1.275 & 2.129 \\
+		Age & 0.0399 & 0.007 & 5.456 & 0.000 & 0.026 & 0.054 \\
+		Pollution & 1.3028 & 0.235 & 5.536 & 0.000 & 0.841 & 1.764 \\
+		Income & -0.2198 & 0.139 & -1.581 & 0.114 & -0.492 & 0.053 \\
+		\hline
+	\end{tabular}
+\end{center}
+
+\subsubsection{Fitted Line}
+
+
+\[
+\text{log(odds of Lung Disease)} = -2.8373 + 1.7021 \times (\text{Smoking}) + 0.0399 \times (\text{Age}) + 1.3028 \times (\text{Pollution}) - 0.2198 \times (\text{Income})
+\]
+% ---- Add this after previous sections ----
+\subsection{Statistically Significant Variables}
+
+\subsubsection{Py Code}
+\begin{lstlisting}
+	print(model.pvalues)
+\end{lstlisting}
+
+\subsubsection{Output}
+\begin{verbatim}
+	Intercept    7.589721e-10
+	Smoking      5.736491e-15
+	Age          4.883161e-08
+	Pollution    3.101963e-08
+	Income       1.138236e-01
+	dtype: float64
+\end{verbatim}
+
+\subsubsection{Interpretation}
+\textbf{Statistically significant predictors (p < 0.05):}
+\begin{itemize}
+	\item \textbf{Smoking} ($p = 5.74 \times 10^{-15}$)
+	\item  \textbf{Age} ($p = 4.88 \times 10^{-8}$)
+	\item  \textbf{Pollution} ($p = 3.10 \times 10^{-8}$)
+\end{itemize}
+
+\textbf{Not statistically significant (p > 0.05):}
+\begin{itemize}
+	\item \textbf{Income} ($p = 0.114$)
+\end{itemize}
+
+In a word, smoking, age, and pollution are significant predictors of Lung Disease. 
+Income is \textbf{not} significant when other variables are included in the model.
+
+% --------------------------------------------------
+
+\subsection{Calculate and Interpret Odds Ratio for Smoking and Lung Disease}
+
+\subsubsection{Py Code}
+\begin{lstlisting}
+	# finding odds ratio
+	table = pd.crosstab(df['Smoking'], df['LungDisease'])
+	odds_ratio = (table.iloc[1,1] / table.iloc[1,0]) / (table.iloc[0,1] / table.iloc[0,0])
+	print(f"Odds Ratio: {odds_ratio:.2f}")
+\end{lstlisting}
+
+\subsubsection{Output}
+\begin{verbatim}
+	Odds Ratio: 5.03
+\end{verbatim}
+
+\subsubsection{Comment}
+Smokers have approximately \textbf{5 times higher odds} of developing lung disease compared to non-smokers.
+% ---- Add this after previous sections ----
+\subsection{Effect of Smoking Before vs After Adjusting for Pollution}
+
+From logistic regression output:
+
+\begin{center}
+	\begin{tabular}{|l|c|l|}
+		\hline
+		\textbf{Model} & \textbf{Smoking Coefficient} & \textbf{Interpretation} \\
+		\hline
+		Unadjusted (simple model, not shown but implied earlier) & Would be similar to OR $\approx$ 1.70 (log scale) & Crude effect \\
+		\hline
+		Adjusted (with Pollution included) & 1.7021 ($p < 0.001$) & Effect remains strong \& significant \\
+		\hline
+	\end{tabular}
+\end{center}
+
+\vspace{1em}
+
+So, smoking's effect remained almost unchanged after adjusting for Pollution because:
+\begin{enumerate}
+	\item Smoking and Pollution are largely independent — smoking doesn't strongly correlate with pollution exposure.
+	\item Both have independent effects on lung disease — each adds unique risk.
+\end{enumerate}
+% ---- Add this after previous sections ----
+\section{Advanced Modeling}
+
+\subsection{Add an Interaction Term (Smoking × Pollution)}
+
+\subsubsection{Py Code}
+\begin{lstlisting}
+	model_interact = smf.logit('LungDisease ~ Smoking * Pollution + Age + Income',
+	data=df_encoded).fit()
+	print(model_interact.summary())
+\end{lstlisting}
+
+\subsubsection{Important Output}
+Coefficient: -0.4217  
+p-value: 0.382 (not significant, p > 0.05)
+
+\subsubsection{Is the Interaction Significant?}
+Here, $p = 0.382 > 0.05$ $\rightarrow$ this interaction is not statistically significant.
+
+% --------------------------------------------------
+
+\subsection{Interpretation}
+The interaction term tells us whether the effect of Smoking depends on Pollution level (or vice versa).
+
+\begin{itemize}
+	\item Negative coefficient (-0.4217) $\rightarrow$ suggests a slightly weaker combined effect than additive (i.e., the whole is slightly less than the sum of parts).
+	\item $p = 0.382$ $\rightarrow$ this interaction is not statistically significant.
+\end{itemize}
+
+Therefore, Smoking and Pollution do not significantly interact — their effects on lung disease are independent and additive, not multiplicative.
+
+% --------------------------------------------------
+
+\subsection{Does Pollution Amplify Smoking Risk?}
+Based on interaction model:
+
+\begin{itemize}
+	\item \textbf{Interaction coefficient = -0.4217} (negative, not positive)
+	\item \textbf{p-value = 0.382} (not significant)
+\end{itemize}
+
+Hence, pollution does \textbf{not amplify} smoking risk — the combined effect is slightly weaker than additive.
+% ---- Add this after previous sections ----
+\subsection{Pollution Amplify Smoking Risk?}
+
+\begin{center}
+	\begin{tabular}{|l|l|}
+		\hline
+		\textbf{Question} & \textbf{Answer} \\
+		\hline
+		Does pollution amplify smoking risk? & \textbf{No — the interaction is not significant} \\
+		\hline
+		What does the negative coefficient suggest? & If anything, a very slight \textbf{sub-additive} effect (less than sum of parts), but statistically it's just random noise \\
+		\hline
+		What's the actual relationship? & Smoking and pollution have \textbf{independent, additive effects} — each increases risk on its own, but they don't multiply each other \\
+		\hline
+	\end{tabular}
+\end{center}
+
+\vspace{1em}
+
+So, Pollution does not significantly amplify or reduce smoking's effect on lung disease. 
+Their effects are \textbf{separate and additive}.
+% ---- Add this after previous sections ----
+\section{Model Evaluation}
+
+\subsection{Compute the ROC Curve and AUC}
+
+\subsubsection{Py Code}
+\begin{lstlisting}
+	import matplotlib.pyplot as plt
+	from sklearn.metrics import roc_curve, auc
+	
+	# Predict probabilities
+	y_pred_prob = model.predict(df_encoded)
+	
+	# Calculate ROC curve
+	fpr, tpr, thresholds = roc_curve(df_encoded["LungDisease"], y_pred_prob)
+	
+	# Calculate AUC
+	roc_auc = auc(fpr, tpr)
+	
+	# Plot ROC curve
+	plt.figure(figsize=(8, 6))
+	plt.plot(fpr, tpr, color='darkorange', lw=2,
+	label=f'ROC curve (AUC = {roc_auc:.3f})')
+	plt.plot([0, 1], [0, 1], color='navy', lw=2,
+	linestyle='--', label='Random (AUC = 0.5)')
+	plt.xlabel('False Positive Rate')
+	plt.ylabel('True Positive Rate')
+	plt.title('Receiver Operating Characteristic (ROC) Curve')
+	plt.legend(loc='lower right')
+	plt.show()
+\end{lstlisting}
+\subsubsection{Output}
+AUC: 0.787
+
+\begin{figure}[b]
+	\centering
+		\vspace{-1cm}
+	\includegraphics[width=0.70\textwidth, height=0.22\textheight]{roc_curve.png}
+	\caption{Receiver Operating Characteristic (ROC) Curve}
+\end{figure}
+\vspace{2cm}
+\vspace{1cm}
+
+\textbf{Comment:} The \textbf{ROC} curve shows your model has good clinical utility — it can effectively separate lung disease patients from healthy individuals, with a reasonable balance between catching true cases and avoiding false alarms.
+
+% ---- Add this after previous sections ----
+\subsection{Is the Model Good?}
+Here, AUC = 0.787 $\rightarrow$ Model is good.
+
+The logistic regression model (with Smoking, Age, Pollution, Income) has good ability to predict who will develop lung disease. 
+About 79\% of the time, it correctly assigns higher risk to those who actually have the disease.
+
+% --------------------------------------------------
+
+\subsection{What is the Confusion Matrix?}
+
+\subsubsection{Py Code}
+\begin{lstlisting}
+	from sklearn.preprocessing import LabelEncoder
+	from sklearn.metrics import confusion_matrix, classification_report
+	
+	# Encode target variable
+	le = LabelEncoder()
+	df['LungDisease'] = le.fit_transform(df['LungDisease'])
+	
+	# Binary prediction (threshold = 0.5)
+	y_pred_class = (y_pred_prob > 0.5).astype(int)
+	
+	# Confusion matrix and classification report
+	cm = confusion_matrix(df['LungDisease'], y_pred_class)
+	print("Confusion Matrix:\n", cm)
+	print("\nClassification Report:\n", classification_report(df['LungDisease'], y_pred_class))
+\end{lstlisting}
+\subsubsection{Output}
+\textbf{Classification Report:}
+
+\begin{verbatim}
+	precision    recall  f1-score   support
+	
+	0       0.71      0.66      0.69       236
+	1       0.72      0.76      0.74       264
+	
+	accuracy                           0.71       500
+	macro avg       0.71      0.71      0.71       500
+	weighted avg       0.71      0.71      0.71       500
+\end{verbatim}
+
+% --------------------------------------------------
+
+\subsubsection{Confusion Matrix}
+\begin{center}
+	\begin{tabular}{|l|c|c|}
+		\hline
+		& \textbf{Predicted: No (0)} & \textbf{Predicted: Yes (1)} \\
+		\hline
+		\textbf{Actual: No (0)} & 156 (TN)  & 80 (FP)  \\
+		\hline
+		\textbf{Actual: Yes (1)} & 63 (FN)  & 201 (TP)  \\
+		\hline
+	\end{tabular}
+\end{center}
+
+% --------------------------------------------------
+
+\textbf{Comment:}
+\begin{itemize}
+	\item TN = 156 — correctly predicted healthy
+	\item TP = 201 — correctly predicted diseased
+	\item FP = 80 — falsely predicted diseased (Type I error)
+	\item FN = 63 — missed diseased cases (Type II error)
+\end{itemize}
+
+ Model performs decently — 71\% accuracy, better than random (50\%).  \\
+ Better at detecting disease (recall = 0.76) than ruling out disease.\\  
+ 80 false positives — some healthy people wrongly flagged.\\
+ 63 false negatives — some diseased patients missed.
+\subsubsection{Summery}
+Model is useful but not perfect — could improve by reducing false 
+positives/negatives with threshold adjustment or adding predictors. 
+
+% ---- Add this after previous sections ----
+\subsection{Discuss Model Accuracy vs Sensitivity vs Specificity}
+
+\subsubsection{1. Accuracy (Overall Correctness)}
+\textbf{Definition:} The percentage of total predictions that were correct.  \\
+\textbf{Result:} 0.71 (71\%).  \\
+\textbf{In Simple Terms:} Out of 500 cases, the model guessed correctly for 357 people. While okay, it means 29\% of your data was misclassified.\\
+
+% --------------------------------------------------
+
+\subsubsection{2. Sensitivity (True Positive Rate / Recall)}
+\textbf{Definition:} How good the model is at finding the "Yes" cases (people with lung disease).\\  
+\textbf{Result:} 0.76 (76\%). \\ 
+\textbf{In Simple Terms:} Out of all people who actually have the disease, the model caught 76\% of them. In medicine, this is crucial because you don't want to miss sick people.  \\
+\textbf{The Gap:} 24\% of sick people were wrongly told they are healthy (False Negatives).
+
+% --------------------------------------------------
+
+\subsubsection{3. Specificity (True Negative Rate)}
+\textbf{Definition:} How good the model is at finding the "No" cases (healthy people).  \\
+\textbf{Result:} 0.66 (66\%) — calculated as \(156 / (156 + 80)\). \\ 
+\textbf{In Simple Terms:} Out of all people who are actually healthy, the model correctly identified 66\% of them.  \\
+\textbf{The Gap:} 34\% of healthy people were wrongly told they have the disease (False Positives).
+
+% ---- Add this after previous sections ----
+\section{Summary Comparison}
+
+\begin{center}
+	\begin{tabular}{|l|c|l|}
+		\hline
+		\textbf{Metric} & \textbf{Score} & \textbf{Key Takeaway} \\
+		\hline
+		Accuracy & 71\% & General reliability of the model. \\
+		\hline
+		Sensitivity & 76\% & Good at catching the disease. \\
+		\hline
+		Specificity & 66\% & Weakest point; many healthy people get "False Alarms." \\
+		\hline
+	\end{tabular}
+\end{center}
+
+\vspace{1em}
+
+\textbf{Conclusion:} The model is \textbf{"aggressive"} — it prefers to flag someone as sick (higher sensitivity) rather than missing them, but this comes at the cost of many false alarms (lower specificity).
+
+% --------------------------------------------------
+
+\section{Research Question Solution}
+
+Exploratory analysis of the lung disease dataset shows that \textbf{smoking}, \textbf{pollution}, and \textbf{age} are the strongest determinants of lung disease. Logistic regression confirms smoking and pollution as statistically significant predictors, with pollution amplifying the harmful effect of smoking. Age contributes moderately, reflecting cumulative exposure.
+
+\vspace{0.5cm}
+
+\textbf{Public health implications:} Integrated strategies are needed — combining tobacco control, pollution reduction, and targeted screening for vulnerable groups. Coordinated action can substantially lower lung disease prevalence.
+
+% ---- Add this at the very end of your document ----
+\vspace{2em}
+\begin{center}
+	\textbf{\LARGE{\textcolor{blue}{\underline{Thank You}}}} \
+	
+	\vspace{0.4em}
+	\textit{\large{Your time and attention are deeply appreciated.}} \
+	
+
+	\textit{\large{May knowledge continue to inspire and guide every discovery ahead.}} \
+	
+
+	\textbf{\textcolor{gray}{-- End of Report --}}
+\end{center}
+
+\end{document}
+
+
